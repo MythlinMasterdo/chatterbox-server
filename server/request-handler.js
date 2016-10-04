@@ -17,7 +17,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var data = {username: 'Jono', message: 'Do my bidding!', results: []};
+var storage = {'results': []};
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -39,15 +39,20 @@ var requestHandler = function(request, response) {
   // The outgoing status.
   var statusCode = 200;
 
+ 
+
   // See the note below about CORS headers.
 
+
   if (request.method === 'GET') {
-    console.log('response********************', response);
     if (request.url !== '/classes/messages') {
       statusCode = 404;
-    }  
+    }
   } else if (request.method === 'POST') {
-    data.results.push(request.method);
+    request.on('data', function(data) {
+      storage.results.push(JSON.parse(data));
+      console.log("dats",data);
+    });
     statusCode = 201;
   }
 
@@ -57,7 +62,7 @@ var requestHandler = function(request, response) {
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'JSON';
+  headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
@@ -68,15 +73,9 @@ var requestHandler = function(request, response) {
   // response.end() will be the body of the response - i.e. what shows
   // up in the browser.
   //
-  if (request.url === '/classes/messages') {
-    console.log('********************');
-  }
-  if (request.method === 'POST') {
-    console.log('posting');
-  }
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify(data));
+  response.end(JSON.stringify(storage));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
